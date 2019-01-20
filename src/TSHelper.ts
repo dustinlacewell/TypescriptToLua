@@ -365,6 +365,11 @@ export class TSHelper {
         return defaultArrayCallMethodNames.has(methodName);
     }
 
+    public static hasDeclareModifier(statement: ts.Statement): boolean {
+        return statement.modifiers
+            && statement.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.DeclareKeyword);
+    }
+
     public static getExplicitThisParameter(signatureDeclaration: ts.SignatureDeclaration): ts.ParameterDeclaration {
         return signatureDeclaration.parameters.find(
             param => ts.isIdentifier(param.name) && param.name.originalKeywordKind === ts.SyntaxKind.ThisKeyword);

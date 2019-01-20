@@ -1,10 +1,10 @@
 import * as path from "path";
 import * as ts from "typescript";
-
-import {CompilerOptions, LuaLibImportKind, LuaTarget} from "./CompilerOptions";
-import {DecoratorKind} from "./Decorator";
 import * as tstl from "./LuaAST";
-import {LuaLib, LuaLibFeature} from "./LuaLib";
+
+import {CompilerOptions, LuaTarget} from "./CompilerOptions";
+import {DecoratorKind} from "./Decorator";
+import {LuaLibFeature} from "./LuaLib";
 import {ContextType, TSHelper as tsHelper} from "./TSHelper";
 import {TSTLErrors} from "./TSTLErrors";
 
@@ -83,66 +83,84 @@ export class LuaTransformer {
         return [tstl.createBlock(statements, undefined, node), this.luaLibFeatureSet];
     }
 
-    public transformStatement(node: ts.Statement): StatementVisitResult {
+    public transformStatement(statement: ts.Statement): StatementVisitResult {
         // Ignore declarations
-        if (node.modifiers && node.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.DeclareKeyword)) {
+        if (tsHelper.hasDeclareModifier(statement)) {
             return undefined;
         }
 
-        switch (node.kind) {
-            // Block
-            case ts.SyntaxKind.Block:
-                return this.transformScopeBlock(node as ts.Block);
-            // Declaration Statements
-            case ts.SyntaxKind.ImportDeclaration:
-                return this.transformImportDeclaration(node as ts.ImportDeclaration);
-            case ts.SyntaxKind.ClassDeclaration:
-                return this.transformClassDeclaration(node as ts.ClassDeclaration);
-            case ts.SyntaxKind.ModuleDeclaration:
-                return this.transformModuleDeclaration(node as ts.ModuleDeclaration);
-            case ts.SyntaxKind.EnumDeclaration:
-                return this.transformEnumDeclaration(node as ts.EnumDeclaration);
-            case ts.SyntaxKind.FunctionDeclaration:
-                return this.transformFunctionDeclaration(node as ts.FunctionDeclaration);
-            case ts.SyntaxKind.TypeAliasDeclaration:
-                return this.transformTypeAliasDeclaration(node as ts.TypeAliasDeclaration);
-            case ts.SyntaxKind.InterfaceDeclaration:
-                return this.transformInterfaceDeclaration(node as ts.InterfaceDeclaration);
-            // Statements
-            case ts.SyntaxKind.VariableStatement:
-                return this.transformVariableStatement(node as ts.VariableStatement);
-            case ts.SyntaxKind.ExpressionStatement:
-                return this.transformExpressionStatement(node as ts.ExpressionStatement);
-            case ts.SyntaxKind.ReturnStatement:
-                return this.transformReturn(node as ts.ReturnStatement);
-            case ts.SyntaxKind.IfStatement:
-                return this.transformIfStatement(node as ts.IfStatement);
-            case ts.SyntaxKind.WhileStatement:
-                return this.transformWhileStatement(node as ts.WhileStatement);
-            case ts.SyntaxKind.DoStatement:
-                return this.transformDoStatement(node as ts.DoStatement);
-            case ts.SyntaxKind.ForStatement:
-                return this.transformForStatement(node as ts.ForStatement);
-            case ts.SyntaxKind.ForOfStatement:
-                return this.transformForOfStatement(node as ts.ForOfStatement);
-            case ts.SyntaxKind.ForInStatement:
-                return this.transformForInStatement(node as ts.ForInStatement);
-            case ts.SyntaxKind.SwitchStatement:
-                return this.transformSwitchStatement(node as ts.SwitchStatement);
-            case ts.SyntaxKind.BreakStatement:
-                return this.transformBreakStatement(node as ts.BreakStatement);
-            case ts.SyntaxKind.TryStatement:
-                return this.transformTryStatement(node as ts.TryStatement);
-            case ts.SyntaxKind.ThrowStatement:
-                return this.transformThrowStatement(node as ts.ThrowStatement);
-            case ts.SyntaxKind.ContinueStatement:
-                return this.transformContinueStatement(node as ts.ContinueStatement);
-            case ts.SyntaxKind.EmptyStatement:
-                return this.transformEmptyStatement(node as ts.EmptyStatement);
-            case ts.SyntaxKind.NotEmittedStatement:
+        if (ts.isBlock(statement)) { return this.transformScopeBlock(statement); }
+        // Declarations
+        else if (ts.isImportDeclaration(statement)) { return this.transformImportDeclaration(statement); }
+        else if (ts.isClassDeclaration(statement)) { return this.transformClassDeclaration(statement); }
+        else if (ts.isModuleDeclaration(statement)) { return this.transformModuleDeclaration(statement); }
+        else if (ts.isEnumDeclaration(statement)) { return this.transformEnumDeclaration(statement); }
+        else if (ts.isFunctionDeclaration(statement)) { return this.transformFunctionDeclaration(statement); }
+        else if (ts.isTypeAliasDeclaration(statement)) { return this.transformTypeAliasDeclaration(statement); }
+        else if (ts.isInterfaceDeclaration(statement)) { return this.transformInterfaceDeclaration(statement); }
+        // Statements
+        else if (ts.isVariableStatement(statement))
+        {
+            return this.transformVariableStatement(statement);
+        }
+        else if (ts.isExpressionStatement(statement))
+        {
+            return this.transformExpressionStatement(statement);
+        }
+        else if (ts.isReturnStatement(statement))
+        {
+            return this.transformReturn(statement);
+        }
+        else if (ts.isIfStatement(statement))
+        {
+            return this.transformIfStatement(statement);
+        }
+        else if (ts.isWhileStatement(statement))
+        {
+            return this.transformWhileStatement(statement);
+        }
+        else if (ts.isDoStatement(statement))
+        {
+            return this.transformDoStatement(statement);
+        }
+        else if (ts.isForOfStatement(statement))
+        {
+            return this.transformForOfStatement(statement);
+        }
+        else if (ts.isForInStatement(statement))
+        {
+            return this.transformForInStatement(statement);
+        }
+        else if (ts.isSwitchStatement(statement))
+        {
+            return this.transformSwitchStatement(statement);
+        }
+        else if (ts.isBreakStatement(statement))
+        {
+            return this.transformBreakStatement(statement);
+        }
+        else if (ts.isTryStatement(statement))
+        {
+            return this.transformTryStatement(statement);
+        }
+        else if (ts.isThrowStatement(statement))
+        {
+            return this.transformThrowStatement(statement);
+        }
+        else if (ts.isContinueStatement(statement))
+        {
+            return this.transformContinueStatement(statement);
+        }
+        else if (ts.isEmptyStatement(statement))
+        {
+            return this.transformEmptyStatement(statement);
+        }
+        else {
+            if (statement.kind === ts.SyntaxKind.NotEmittedStatement)
+            {
                 return undefined;
-            default:
-                throw TSTLErrors.UnsupportedKind("Statement", node.kind, node);
+            }
+            throw TSTLErrors.UnsupportedKind("Statement", statement.kind, statement);
         }
     }
 
